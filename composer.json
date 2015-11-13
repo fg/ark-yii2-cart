@@ -1,0 +1,20 @@
+{
+    "name": "ark/yii2-cart",
+    "description": "Yet Another Cart Bundle For Yii2 Framework",
+    "keywords": ["ark-yii-bundles", "cart", "shop", "ecommerce", "yii2", "yii2-component"],
+    "license": "MIT License",
+    "authors": [
+        {
+            "name": "Fatih GÜRSOY",
+            "email": "fatihgursoy@ymail.com"
+        }
+    ],
+    "require": {
+        "yiisoft/yii2": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "ark\\yii\\cart\\": "src/"
+        }
+    }
+}
