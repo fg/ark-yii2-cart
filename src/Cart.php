@@ -56,14 +56,21 @@ class Cart extends \yii\base\Component
         $this->cart->addItem($product, $quantity);
     }
 
-    public function updateItem(ProductInterface $product, $quantity)
+    public function deleteItem(ProductInterface $product, $quantity)
     {
         $this->cart->updateItem($product, $quantity);
     }
 
-    public function deleteItem(ProductInterface $product)
+    public function removeItem(ProductInterface $product)
     {
-        $this->deleteItem($product);
+        $this->cart->deleteItem($product);
+    }
+
+    /**
+     * @return boolean
+     */
+    public function destroy() {
+        return $this->storage->destroy();
     }
 
     /**
@@ -80,12 +87,5 @@ class Cart extends \yii\base\Component
     public function getStorage()
     {
         return $this->storage;
-    }
-
-    /**
-     * @return boolean
-     */
-    public function destroy() {
-        return $this->storage->destroy();
     }
 }
