@@ -2,6 +2,7 @@
 
 namespace ark\yii\cart\model;
 
+use ark\yii\cart\event\CartActionEvent;
 use ark\yii\cart\storage\StorageInterface;
 use Yii;
 use DateTime;
@@ -59,24 +60,18 @@ class CartModel extends Model
     public $items = [];
 
     /**
-     * @var StorageInterface
-     */
-    protected $storage;
-
-    /**
      * @param array $config name-value pairs that will be used to initialize the object properties
      */
     public function __construct($config = [])
     {
         parent::__construct($config);
-        $this->storage = Yii::$app->cart->getStorage();
-
     }
 
     public function init()
     {
         $this->expires_at = (new DateTime('+4 hours'))->format('Y-m-d H:i:s');
         $this->created_at = (new DateTime())->format('Y-m-d H:i:s');
+
         $this->on(self::EVENT_CART_UPDATED,  [$this, 'afterCartUpdated']);
     }
 
@@ -88,21 +83,16 @@ class CartModel extends Model
     {
         $itemHash = $this->generateHash($product);
 
-        if (array_key_exists($itemHash, $this->items)) {
-            /** @var CartItemModel $item */
-            $item = $this->items[$itemHash];
-            $item->quantity = $item->quantity + $quantity;
-        } else {
-            $item = new CartItemModel();
-            $item->product_id = $product->getId();
-            $item->name = $product->getName();
-            $item->total_price = $product->getPrice();
-            $item->total_original_price = $product->getOriginalPrice();
-            $item->quantity = $quantity;
-            $this->items[$itemHash] = $item;
-        }
+        $cartItemInstance = array_key_exists($itemHash, $this->items) ? $this->items[$itemHash] : new CartItemModel();
+        $cartItemInstance->product_id = $product->getId();
+        $cartItemInstance->name = $product->getName();
+        $cartItemInstance->quantity = $cartItemInstance->quantity + $quantity;
+        $cartItemInstance->total_price = $product->getPrice();
+        $cartItemInstance->total_original_price = $product->getOriginalPrice();
 
-        $this->trigger(self::EVENT_CART_UPDATED);
+        $this->items[$itemHash] = $cartItemInstance;
+
+        $this->trigger(self::EVENT_CART_UPDATED, new CartActionEvent(['product' => $product, 'cart' => $this]));
     }
 
     /**
@@ -114,11 +104,10 @@ class CartModel extends Model
         $itemHash = $this->generateHash($product);
 
         if (array_key_exists($itemHash, $this->items)) {
-            $item = $this->items[$itemHash];
-            $item->quantity = $quantity;
+            $this->items[$itemHash]->quantity = $quantity;
         }
 
-        $this->trigger(self::EVENT_CART_UPDATED);
+        $this->trigger(self::EVENT_CART_UPDATED, new CartActionEvent(['product' => $product, 'cart' => $this]));
     }
 
     /**
@@ -132,7 +121,7 @@ class CartModel extends Model
             unset($this->items[$itemHash]);
         }
 
-        $this->trigger(self::EVENT_CART_UPDATED);
+        $this->trigger(self::EVENT_CART_UPDATED, new CartActionEvent(['product' => $product, 'cart' => $this]));
     }
 
     /**
@@ -144,7 +133,7 @@ class CartModel extends Model
     }
 
     /**
-     * @param ChangeCartEvent $event
+     * @param CartActionEvent $event
      */
     protected function afterCartUpdated($event)
     {

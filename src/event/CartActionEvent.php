@@ -5,15 +5,15 @@ namespace ark\yii\cart\event;
 use yii\base\Event;
 use ark\yii\cart\ProductInterface;
 
-class ChangeCartEvent extends Event
+class CartActionEvent extends Event
 {
     /**
-     * @var ProductInterface
+     * @var ProductInterface $product
      */
     public $product;
 
     /**
-     * @var integer
+     * @var
      */
-    public $qty;
+    public $cart;
 }
